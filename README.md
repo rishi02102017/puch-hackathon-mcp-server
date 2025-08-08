@@ -1,4 +1,4 @@
-# Content Optimizer MCP Server
+ <h1 align="center"> Content Optimizer MCP Server</h1>
 
 🚀 **GenZ's MCP Server for the Puch AI Hackathon**
 
