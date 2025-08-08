@@ -1,0 +1,42 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Golden File Snapshots > should generate consistent TLDR output 1`] = `
+{
+  "action_items": [
+    "We need to increase sales by 20%.",
+    "Action: The marketing team should create new campaigns.",
+    "We will review progress next month.",
+  ],
+  "summary": "Key topics discussed: todays, meeting, discussed. In today's meeting, we discussed the quarterly goals The discussion covered 4 main points and identified several actionable next steps.",
+}
+`;
+
+exports[`Golden File Snapshots > should generate consistent casual post 1`] = `
+"So I was thinking about work from home today... 🤔
+
+I've been experimenting with work from home for a while now, and honestly? It's a game-changer. Here's what I wish I knew earlier.
+
+Anyone else tried this? I'd love to hear your stories!
+
+#workfromhome #Learning #Tips #Insights #Community #Sharing"
+`;
+
+exports[`Golden File Snapshots > should generate consistent fun post 1`] = `
+"🎉 Plot twist: life hacks is actually AMAZING!
+
+Okay, so life hacks is basically magic. I'm not even kidding—it's like having a superpower that actually works!
+
+This is too good not to share! Tag someone who needs to see this!
+
+#lifehacks #Viral #Trending #Amazing #MustKnow #GameChanger"
+`;
+
+exports[`Golden File Snapshots > should generate consistent professional post 1`] = `
+"💡 Here's what most people get wrong about machine learning:
+
+The data is clear: organizations that embrace machine learning see 3x better outcomes. But it's not about the tools—it's about the mindset shift.
+
+The future is now. Are you ready to be part of it?
+
+#ML #DataScience"
+`;
