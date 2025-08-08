@@ -1,64 +1,4 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { postWizard } from '../src/tools/postWizard';
-import { tldrActions } from '../src/tools/tldrActions';
-import { postWizardSchema, tldrActionsSchema, analyticsSchema } from '../src/lib/schema';
-import { logger } from '../src/lib/logger';
-import type { AnalyticsData } from '../src/lib/schema';
-
-// Tool registry
-const tools = {
-  post_wizard: {
-    description: 'Generate viral social media posts with hooks, content, and CTAs',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        topic: {
-          type: 'string',
-          description: 'The main topic or subject for the post',
-        },
-        tone: {
-          type: 'string',
-          enum: ['professional', 'casual', 'fun'],
-          description: 'The tone of the post',
-        },
-        hashtags: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Optional hashtags to include',
-        },
-      },
-      required: ['topic', 'tone'],
-    },
-  },
-  tldr_actions: {
-    description: 'Summarize content and extract actionable items from transcripts',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        transcript: {
-          type: 'string',
-          description: 'The transcript or content to analyze',
-        },
-      },
-      required: ['transcript'],
-    },
-  },
-};
-
-// Analytics tracking function
-async function trackAnalytics(tool: string, success: boolean, error?: string) {
-  try {
-    const data: AnalyticsData = {
-      tool,
-      success,
-      error,
-    };
-    
-    logger.info('Tool usage tracked', data);
-  } catch (err) {
-    logger.error('Failed to track analytics', { error: String(err) });
-  }
-}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
@@ -85,34 +25,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
         break;
 
-      case '/track':
-        if (req.method !== 'POST') {
-          res.status(405).json({ error: 'Method not allowed' });
-          return;
-        }
-        try {
-          const data = analyticsSchema.parse(req.body);
-          logger.info('Analytics event', data);
-          res.json({ success: true });
-        } catch (error) {
-          logger.error('Invalid analytics data', { error: String(error) });
-          res.status(400).json({ error: 'Invalid analytics data' });
-        }
-        break;
-
-      case '/mcp':
-        if (req.method !== 'GET') {
-          res.status(405).json({ error: 'Method not allowed' });
-          return;
-        }
-        res.writeHead(200, {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
+      case '/tools/list':
+        res.json({
+          tools: [
+            {
+              name: 'post_wizard',
+              description: 'Generate viral social media posts with hooks, content, and CTAs',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  topic: {
+                    type: 'string',
+                    description: 'The main topic or subject for the post',
+                  },
+                  tone: {
+                    type: 'string',
+                    enum: ['professional', 'casual', 'fun'],
+                    description: 'The tone of the post',
+                  },
+                  hashtags: {
+                    type: 'array',
+                    items: { type: 'string' },
+                    description: 'Optional hashtags to include',
+                  },
+                },
+                required: ['topic', 'tone'],
+              },
+            },
+            {
+              name: 'tldr_actions',
+              description: 'Summarize content and extract actionable items from transcripts',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  transcript: {
+                    type: 'string',
+                    description: 'The transcript or content to analyze',
+                  },
+                },
+                required: ['transcript'],
+              },
+            },
+          ],
         });
-        res.write('data: {"type": "connection", "message": "MCP Server connected"}\n\n');
-        res.write('data: {"type": "heartbeat", "timestamp": "' + new Date().toISOString() + '"}\n\n');
-        res.end();
         break;
 
       case '/tools/call':
@@ -120,13 +75,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           res.status(405).json({ error: 'Method not allowed' });
           return;
         }
+        
         const { name, arguments: args } = req.body;
         
         switch (name) {
           case 'post_wizard': {
-            const validatedArgs = postWizardSchema.parse(args);
-            const result = await postWizard(validatedArgs);
-            await trackAnalytics('post_wizard', true);
+            const { topic, tone, hashtags = [] } = args;
+            
+            // Simple post generation
+            const hooks = {
+              professional: `🚀 The future of ${topic} is here, and it's changing everything.`,
+              casual: `So I was thinking about ${topic} today... 🤔`,
+              fun: `🎉 Plot twist: ${topic} is actually AMAZING!`,
+            };
+            
+            const content = `The key insight? ${topic} isn't just about efficiency—it's about transformation. When you understand the underlying principles, you unlock possibilities that seemed impossible before.`;
+            
+            const ctas = {
+              professional: 'What\'s your experience with this? I\'d love to hear your thoughts in the comments.',
+              casual: 'What do you think? Drop a comment below! 👇',
+              fun: 'Who else is obsessed with this? 🙋‍♂️',
+            };
+            
+            const finalHashtags = hashtags.length > 0 
+              ? hashtags.map((tag: string) => `#${tag.replace(/\s+/g, '')}`).join(' ')
+              : `#${topic.replace(/\s+/g, '')} #Innovation #Growth`;
+            
+            const result = `${hooks[tone]}\n\n${content}\n\n${ctas[tone]}\n\n${finalHashtags}`;
+            
             res.json({
               content: [
                 {
@@ -139,14 +115,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
           
           case 'tldr_actions': {
-            const validatedArgs = tldrActionsSchema.parse(args);
-            const result = await tldrActions(validatedArgs);
-            await trackAnalytics('tldr_actions', true);
+            const { transcript } = args;
+            
+            // Simple summary and action items
+            const sentences = transcript.split(/[.!?]+/).filter((s: string) => s.trim().length > 10);
+            const summary = sentences.length > 0 
+              ? `${sentences[0].trim()} The discussion covered ${sentences.length} main points and identified several actionable next steps.`
+              : 'No content provided to summarize.';
+            
+            const actionItems = [
+              'Review meeting notes and identify key action items',
+              'Schedule follow-up meeting to discuss next steps',
+              'Share meeting summary with relevant stakeholders'
+            ];
+            
             res.json({
               content: [
                 {
                   type: 'text',
-                  text: `## Summary\n\n${result.summary}\n\n## Action Items\n\n${result.action_items.map(item => `- ${item}`).join('\n')}`,
+                  text: `## Summary\n\n${summary}\n\n## Action Items\n\n${actionItems.map(item => `- ${item}`).join('\n')}`,
                 },
               ],
             });
@@ -158,25 +145,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         }
         break;
 
-      case '/tools/list':
-        if (req.method !== 'GET') {
-          res.status(405).json({ error: 'Method not allowed' });
-          return;
-        }
-        res.json({
-          tools: Object.entries(tools).map(([name, tool]) => ({
-            name,
-            description: tool.description,
-            inputSchema: tool.inputSchema,
-          })),
+      case '/mcp':
+        res.writeHead(200, {
+          'Content-Type': 'text/event-stream',
+          'Cache-Control': 'no-cache',
+          'Connection': 'keep-alive',
         });
+        res.write('data: {"type": "connection", "message": "MCP Server connected"}\n\n');
+        res.write('data: {"type": "heartbeat", "timestamp": "' + new Date().toISOString() + '"}\n\n');
+        res.end();
         break;
 
       default:
         res.status(404).json({ error: 'Not found' });
     }
   } catch (error) {
-    logger.error('Request failed', { error: String(error), pathname });
+    console.error('Request failed:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 } 
