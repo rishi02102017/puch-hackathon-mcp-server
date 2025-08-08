@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Production-ready MCP server for Puch AI Hackathon",
   "main": "dist/server.js",
+  "type": "module",
   "scripts": {
     "dev": "tsx src/server.ts",
     "build": "tsup src/server.ts --format cjs,esm --dts",
