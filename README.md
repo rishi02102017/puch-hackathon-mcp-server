@@ -1,5 +1,9 @@
  <h1 align="center"> Content Optimizer MCP Server</h1>
 
+<p align="center">
+  <img src="puch_ai_banner.jpeg" alt="Banner image" width="500"/>
+</p>
+
 🚀 **GenZ's MCP Server for the Puch AI Hackathon**
 
 A powerful content optimization tool that helps creators, marketers, and professionals generate viral social media posts and extract actionable insights from meetings. Built with TypeScript and deployed on Vercel.
