@@ -189,16 +189,50 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         break;
 
       case '/mcp':
-        // Handle MCP protocol - support both GET and POST
+        // Handle MCP protocol - support GET, POST, and SSE
         if (req.method === 'GET') {
-          res.json({
-            jsonrpc: '2.0',
-            result: {
-              protocolVersion: '2024-11-05',
-              capabilities: { tools: {} },
-              serverInfo: { name: 'content-optimizer', version: '1.0.0' }
-            }
-          });
+          // Check if client wants SSE
+          const acceptHeader = req.headers.accept;
+          if (acceptHeader?.includes('text/event-stream')) {
+            // Set up SSE
+            res.writeHead(200, {
+              'Content-Type': 'text/event-stream',
+              'Cache-Control': 'no-cache',
+              'Connection': 'keep-alive',
+              'Access-Control-Allow-Origin': '*',
+              'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+            });
+            
+            // Send initial server info
+            const serverInfo = {
+              jsonrpc: '2.0',
+              result: {
+                protocolVersion: '2024-11-05',
+                capabilities: { tools: {} },
+                serverInfo: { name: 'content-optimizer', version: '1.0.0' }
+              }
+            };
+            res.write(`data: ${JSON.stringify(serverInfo)}\n\n`);
+            
+            // Keep connection alive
+            const heartbeat = setInterval(() => {
+              res.write(`data: ${JSON.stringify({ type: 'heartbeat' })}\n\n`);
+            }, 30000);
+            
+            req.on('close', () => {
+              clearInterval(heartbeat);
+            });
+          } else {
+            // Regular JSON response
+            res.json({
+              jsonrpc: '2.0',
+              result: {
+                protocolVersion: '2024-11-05',
+                capabilities: { tools: {} },
+                serverInfo: { name: 'content-optimizer', version: '1.0.0' }
+              }
+            });
+          }
         } else if (req.method === 'POST') {
           const mcpRequest = req.body;
           const method = mcpRequest?.method;
