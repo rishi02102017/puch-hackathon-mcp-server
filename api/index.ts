@@ -185,7 +185,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         break;
 
       case '/mcp':
-        // Simple MCP endpoint - Puch AI will handle the complex handshaking
+        // Simple MCP endpoint - works for both GET and POST
         res.json({
           status: 'MCP Server Ready',
           serverInfo: {
