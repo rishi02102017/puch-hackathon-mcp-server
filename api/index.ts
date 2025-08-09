@@ -1,5 +1,9 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
+// Authentication configuration
+const AUTH_TOKEN = process.env.AUTH_TOKEN || '4abe737b2ddf71ec5381f29cbd1495ee';
+const MY_NUMBER = process.env.MY_NUMBER || '9101284785'; // Your WhatsApp number
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -28,6 +32,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case '/tools/list':
         res.json({
           tools: [
+            {
+              name: 'validate',
+              description: 'Validate bearer token and return user phone number (required by Puch AI)',
+              inputSchema: {
+                type: 'object',
+                properties: {
+                  token: {
+                    type: 'string',
+                    description: 'Bearer token for authentication',
+                  },
+                },
+                required: ['token'],
+              },
+            },
             {
               name: 'post_wizard',
               description: 'Generate viral social media posts with hooks, content, and CTAs',
@@ -79,6 +97,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const { name, arguments: args } = req.body;
         
         switch (name) {
+          case 'validate': {
+            const { token } = args;
+            
+            // Validate the bearer token
+            if (token !== AUTH_TOKEN) {
+              res.status(401).json({ error: 'Invalid bearer token' });
+              return;
+            }
+            
+            // Return the phone number in the required format
+            res.json({
+              content: [
+                {
+                  type: 'text',
+                  text: MY_NUMBER, // Returns phone number like "919876543210"
+                },
+              ],
+            });
+            break;
+          }
+          
           case 'post_wizard': {
             const { topic, tone, hashtags = [] } = args;
             
