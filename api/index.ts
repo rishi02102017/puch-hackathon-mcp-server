@@ -2,7 +2,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Authentication configuration  
 const AUTH_TOKEN = process.env.AUTH_TOKEN || '4abe737b2ddf71ec5381f29cbd1495ee';
-const MY_NUMBER = process.env.MY_NUMBER || '9101284785'; // Your WhatsApp number
+const MY_NUMBER = process.env.MY_NUMBER || '919101284785'; // Your WhatsApp number with country code
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
@@ -300,7 +300,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 res.json({
                   jsonrpc: '2.0',
                   id: requestId,
-                  result: { content: [{ type: 'text', text: MY_NUMBER }] }
+                  result: MY_NUMBER
                 });
               } else {
                 res.json({
