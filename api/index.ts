@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
-// Authentication configuration
+// Authentication configuration  
 const AUTH_TOKEN = process.env.AUTH_TOKEN || '4abe737b2ddf71ec5381f29cbd1495ee';
 const MY_NUMBER = process.env.MY_NUMBER || '9101284785'; // Your WhatsApp number
 
@@ -185,73 +185,141 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         break;
 
       case '/mcp':
-        // Simple MCP endpoint - works for both GET and POST
-        res.json({
-          status: 'MCP Server Ready',
-          serverInfo: {
-            name: 'content-optimizer',
-            version: '1.0.0'
-          },
-          capabilities: {
-            tools: {
-              listChanged: false
+        // Handle MCP protocol - support both GET and POST
+        if (req.method === 'GET') {
+          res.json({
+            jsonrpc: '2.0',
+            result: {
+              protocolVersion: '2024-11-05',
+              capabilities: { tools: {} },
+              serverInfo: { name: 'content-optimizer', version: '1.0.0' }
             }
-          },
-          tools: [
-            {
-              name: 'validate',
-              description: 'Validate bearer token and return user phone number (required by Puch AI)',
-              inputSchema: {
-                type: 'object',
-                properties: {
-                  token: {
-                    type: 'string',
-                    description: 'Bearer token for authentication',
+          });
+        } else if (req.method === 'POST') {
+          const mcpRequest = req.body;
+          const method = mcpRequest?.method;
+          const requestId = mcpRequest?.id;
+          const params = mcpRequest?.params || {};
+          
+          if (method === 'initialize') {
+            res.json({
+              jsonrpc: '2.0',
+              id: requestId,
+              result: {
+                protocolVersion: '2024-11-05',
+                capabilities: { tools: {} },
+                serverInfo: { name: 'content-optimizer', version: '1.0.0' }
+              }
+            });
+          } else if (method === 'tools/list') {
+            res.json({
+              jsonrpc: '2.0',
+              id: requestId,
+              result: {
+                tools: [
+                  {
+                    name: 'validate',
+                    description: 'Validate bearer token and return user phone number',
+                    inputSchema: {
+                      type: 'object',
+                      properties: { token: { type: 'string' } },
+                      required: ['token']
+                    }
                   },
-                },
-                required: ['token'],
-              },
-            },
-            {
-              name: 'post_wizard',
-              description: 'Generate viral social media posts with hooks, content, and CTAs',
-              inputSchema: {
-                type: 'object',
-                properties: {
-                  topic: {
-                    type: 'string',
-                    description: 'The main topic or subject for the post',
+                  {
+                    name: 'post_wizard',
+                    description: 'Generate viral social media posts',
+                    inputSchema: {
+                      type: 'object',
+                      properties: {
+                        topic: { type: 'string' },
+                        tone: { type: 'string', enum: ['professional', 'casual', 'fun'] },
+                        hashtags: { type: 'array', items: { type: 'string' } }
+                      },
+                      required: ['topic', 'tone']
+                    }
                   },
-                  tone: {
-                    type: 'string',
-                    enum: ['professional', 'casual', 'fun'],
-                    description: 'The tone of the post',
-                  },
-                  hashtags: {
-                    type: 'array',
-                    items: { type: 'string' },
-                    description: 'Optional hashtags to include',
-                  },
-                },
-                required: ['topic', 'tone'],
-              },
-            },
-            {
-              name: 'tldr_actions',
-              description: 'Summarize content and extract actionable items from transcripts',
-              inputSchema: {
-                type: 'object',
-                properties: {
-                  transcript: {
-                    type: 'string',
-                    description: 'The transcript or content to analyze',
-                  },
-                },
-                required: ['transcript'],
-              },
+                  {
+                    name: 'tldr_actions',
+                    description: 'Summarize transcripts and extract action items',
+                    inputSchema: {
+                      type: 'object',
+                      properties: { transcript: { type: 'string' } },
+                      required: ['transcript']
+                    }
+                  }
+                ]
+              }
+            });
+          } else if (method === 'tools/call') {
+            const toolName = params.name;
+            const args = params.arguments || {};
+            
+            if (toolName === 'validate') {
+              if (args.token === AUTH_TOKEN) {
+                res.json({
+                  jsonrpc: '2.0',
+                  id: requestId,
+                  result: { content: [{ type: 'text', text: MY_NUMBER }] }
+                });
+              } else {
+                res.json({
+                  jsonrpc: '2.0',
+                  id: requestId,
+                  error: { code: -32602, message: 'Invalid bearer token' }
+                });
+              }
+            } else if (toolName === 'post_wizard') {
+              const { topic, tone, hashtags = [] } = args;
+              const hooks = {
+                professional: `🚀 The future of ${topic} is here, and it's changing everything.`,
+                casual: `So I was thinking about ${topic} today... 🤔`,
+                fun: `🎉 Plot twist: ${topic} is actually AMAZING!`
+              };
+              const content = `The key insight? ${topic} isn't just about efficiency—it's about transformation.`;
+              const ctas = {
+                professional: "What's your experience with this? I'd love to hear your thoughts.",
+                casual: 'What do you think? Drop a comment below! 👇',
+                fun: 'Who else is obsessed with this? 🙋‍♂️'
+              };
+              const finalHashtags = hashtags.length > 0 
+                ? hashtags.map((tag: string) => `#${tag}`).join(' ')
+                : `#${topic} #Innovation`;
+              const result = `${hooks[tone]}\n\n${content}\n\n${ctas[tone]}\n\n${finalHashtags}`;
+              
+              res.json({
+                jsonrpc: '2.0',
+                id: requestId,
+                result: { content: [{ type: 'text', text: result }] }
+              });
+            } else if (toolName === 'tldr_actions') {
+              const { transcript } = args;
+              const summary = `Summary of discussion about ${transcript.substring(0, 50)}...`;
+              const actionItems = ['Review notes', 'Schedule follow-up', 'Share summary'];
+              const result = `## Summary\n${summary}\n\n## Action Items\n${actionItems.map(item => `- ${item}`).join('\n')}`;
+              
+              res.json({
+                jsonrpc: '2.0',
+                id: requestId,
+                result: { content: [{ type: 'text', text: result }] }
+              });
+            } else {
+              res.json({
+                jsonrpc: '2.0',
+                id: requestId,
+                error: { code: -32601, message: `Unknown tool: ${toolName}` }
+              });
             }
-          ]
-        });
+          } else {
+            res.json({
+              jsonrpc: '2.0',
+              id: requestId,
+              error: { code: -32601, message: `Unknown method: ${method}` }
+            });
+          }
+        } else {
+          res.status(405).json({ error: 'Method not allowed' });
+        }
         break;
 
       default:
