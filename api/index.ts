@@ -8,7 +8,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -17,6 +17,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const { pathname } = new URL(req.url || '', `http://${req.headers.host}`);
+  
+  // Extract bearer token from Authorization header
+  const authHeader = req.headers.authorization;
+  const bearerToken = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
 
   try {
     switch (pathname) {
@@ -256,7 +260,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const args = params.arguments || {};
             
             if (toolName === 'validate') {
-              if (args.token === AUTH_TOKEN) {
+              // Check token from args or Authorization header
+              const tokenToCheck = args.token || bearerToken;
+              if (tokenToCheck === AUTH_TOKEN) {
                 res.json({
                   jsonrpc: '2.0',
                   id: requestId,
