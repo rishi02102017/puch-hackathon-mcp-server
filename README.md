@@ -117,8 +117,8 @@ Analyzes skill gaps and provides personalized learning recommendations.
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `AUTH_TOKEN` | Secret token for authentication | `puch_hackathon_2025_jyotish` |
-| `MY_NUMBER` | Phone number in format {country_code}{number} | `919101284785` |
+| `AUTH_TOKEN` | Secret token for authentication | `xxxx_xxxxxxxxx_xxxx_xxxxxxx` |
+| `MY_NUMBER` | Phone number in format {country_code}{number} | `91xxxxxxxxxx` |
 
 ## 📝 API Endpoints
 
