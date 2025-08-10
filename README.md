@@ -137,9 +137,9 @@ This project is licensed under the Apache 2.0 License.
 
 Built for **Puch AI Hackathon** - "What's the coolest way you can build with AI?"
 
-**Team:** Jyotishman Das and Suvadip Chakraborty
-**Project:** Career & Business Intelligence Suite
-**Hashtag:** #BuildWithPuch
+- **Team:** Jyotishman Das and Suvadip Chakraborty
+- **Project:** Career & Business Intelligence Suite
+- **Hashtag:** #BuildWithPuch
 
 ---
 
