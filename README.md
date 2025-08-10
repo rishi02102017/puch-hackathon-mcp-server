@@ -1,4 +1,8 @@
-# Career & Business Intelligence Suite - MCP Server
+<h1 align="center"> Career & Business Intelligence Suite - MCP Server</h1>
+
+<p align="center">
+  <img src="puch_ai_banner.jpeg" alt="Banner image" width="500"/>
+</p>
 
 A powerful Model Context Protocol (MCP) server that provides AI-powered career and business intelligence tools for Puch AI.
 
